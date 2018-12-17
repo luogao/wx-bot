@@ -14,6 +14,11 @@ const wechatBot = {}
 // 全局Socket 对象
 const socketObj = {}
 
+const needLoginRes = {
+  ret: -1,
+  msg: '登录信息失效，请先登录'
+}
+
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
     cb(null, path.resolve(__dirname, path.join('.', 'uploads', '/')))
@@ -65,23 +70,35 @@ app.post('/groupList', async function(req, res) {
   const { user } = req.body
   const bot = wechatBot[user]
   if (!bot) {
-    res.send('请先登录!')
+    res.send(needLoginRes)
     return
   }
-  const groups = await bot.findAllGroup()
-  const _groups = groups.map(group => {
-    const { payload } = group
-    return {
-      id: payload.id,
-      name: payload.topic
+  try {
+    const groups = await bot.findAllGroup()
+    const _groups = groups.map(group => {
+      const { payload } = group
+      return {
+        id: payload.id,
+        name: payload.topic
+      }
+    })
+    const data = {
+      status: 200,
+      data: _groups
     }
-  })
-  const data = {
-    status: 200,
-    data: _groups
+    console.log('获取群列表成功')
+    res.send(data)
+  } catch (err) {
+    const data = {
+      status: 200,
+      data: {
+        msg: '获取群列表失败',
+        ret: -40
+      }
+    }
+    console.log('获取群列表失败')
+    res.send(data)
   }
-  console.log('获取群列表成功')
-  res.send(data)
 })
 
 app.post('/logout', async function(req, res) {
@@ -112,7 +129,7 @@ app.post('/massMessage', async function(req, res) {
   const { groups, content, type, user } = req.body
   const bot = wechatBot[user]
   if (!bot) {
-    res.send('请先登录!')
+    res.send(needLoginRes)
     return
   }
   let _message = content

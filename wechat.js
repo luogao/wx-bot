@@ -54,6 +54,7 @@ class myBot {
 
   onError(err) {
     console.log(err)
+    this.socket && this.socket.emit('serverError', err)
     this.stop()
   }
 
