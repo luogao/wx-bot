@@ -38,6 +38,7 @@ class myBot {
   }
 
   onLogin(user) {
+    console.log('login!')
     this.socket && this.socket.emit('loginSucceed', user)
     this.handleLogin && this.handleLogin(user)
   }
@@ -49,6 +50,10 @@ class myBot {
   }
 
   onMessage(message) {
+    const messageTo = message.to()
+    if(messageTo && messageTo.payload.name === '七磅'){
+      this.forwardMessage(message)
+    }
     this.handleMessage && this.handleMessage(message)
   }
 
@@ -90,6 +95,14 @@ class myBot {
   updateSocket(socket) {
     if (this.socket) {
       this.socket = socket
+    }
+  }
+
+  async forwardMessage(msg) {
+    const room = await this.bot.Room.find({ topic: 'test' })
+    if (room) {
+      await msg.forward(room)
+      console.log('forward this message to wechaty room!')
     }
   }
 
